@@ -6,7 +6,7 @@ maxtries=5    # 5 * 10 minutes = about 50 minutes total of waiting,
               # not counting running and failing.
 
 echo "Starting Victoria metrics backup process..."
-while ! /vmbackup-prod -storageDataPath="${STORAGE_DATA_PATH}" -dst="${DESTINATION}" -snapshot.createURL="${SNAPSHOT_CREATE_URL}/snapshot/create"; do
+while ! /vmbackup-prod -storageDataPath="${STORAGE_DATA_PATH}" -dst="${DESTINATION}" -snapshot.createURL="${SNAPSHOT_CREATE_URL}"; do
   echo "Backup attempt failed. Remaining tries: $maxtries"
   maxtries=$(( maxtries - 1 ))
   if [ "$maxtries" -eq 0 ]; then
