@@ -27,7 +27,7 @@ func main() {
 	}
 
 	var cronSchedule string
-	c := cron.New()
+	c := cron.New(cron.WithLogger(cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 
 	for {
 		newCronSchedule := os.Getenv("CRON_SCHEDULE")
@@ -38,7 +38,7 @@ func main() {
 		if newCronSchedule != cronSchedule {
 			cronSchedule = newCronSchedule
 			c.Stop()
-			c = cron.New()
+			c = cron.New(cron.WithLogger(cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 
 			_, err := c.AddFunc(cronSchedule, backup)
 			if err != nil {
@@ -52,9 +52,9 @@ func main() {
 			}
 			nextTime := expr.Next(time.Now())
 			log.Printf("Cron schedule updated to: %s (next run at: %s)", cronSchedule, nextTime.Format(time.RFC1123))
-
 			c.Start()
 		}
+		
 		time.Sleep(10 * time.Second)
 	}
 }

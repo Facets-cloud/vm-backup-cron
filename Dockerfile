@@ -8,14 +8,14 @@ RUN go mod download
 
 COPY main.go .
 
-RUN go build -o /vmbackup-prod main.go
+RUN go build -o /cron-vmbackup main.go
 
 FROM victoriametrics/vmbackup:v1.96.0
 
 WORKDIR /job
 
-COPY --from=builder /vmbackup-prod /vmbackup-prod
+COPY --from=builder /cron-vmbackup /cron-vmbackup
 
-RUN chmod +x /vmbackup-prod
+RUN chmod +x /cron-vmbackup
 
-ENTRYPOINT ["/vmbackup-prod"]
+ENTRYPOINT ["/cron-vmbackup"]
