@@ -5,6 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/robfig/cron/v3"
+	"github.com/gorhill/cronexpr"
 )
 
 func main() {
@@ -23,8 +26,8 @@ func main() {
 		}
 	}
 
-	var ticker *time.Ticker
 	var cronSchedule string
+	c := cron.New()
 
 	for {
 		newCronSchedule := os.Getenv("CRON_SCHEDULE")
@@ -34,25 +37,24 @@ func main() {
 
 		if newCronSchedule != cronSchedule {
 			cronSchedule = newCronSchedule
-			if ticker != nil {
-				ticker.Stop()
-			}
+			c.Stop()
+			c = cron.New()
 
-			duration, err := time.ParseDuration(cronSchedule)
+			_, err := c.AddFunc(cronSchedule, backup)
 			if err != nil {
 				log.Fatalf("Failed to parse CRON_SCHEDULE: %v", err)
 			}
 
-			ticker = time.NewTicker(duration)
-			log.Printf("Cron schedule updated to: %s", cronSchedule)
-			log.Printf("Next backup will occur in: %s", duration.String())
-		}
+			// Parse the cron expression to get the next run time
+			expr, err := cronexpr.Parse(cronSchedule)
+			if err != nil {
+				log.Fatalf("Failed to parse CRON_SCHEDULE: %v", err)
+			}
+			nextTime := expr.Next(time.Now())
+			log.Printf("Cron schedule updated to: %s (next run at: %s)", cronSchedule, nextTime.Format(time.RFC1123))
 
-		select {
-		case <-ticker.C:
-			backup()
-		case <-time.After(10 * time.Second):
-			// Check for updated cron schedule every 10 seconds
+			c.Start()
 		}
+		time.Sleep(10 * time.Second)
 	}
 }
